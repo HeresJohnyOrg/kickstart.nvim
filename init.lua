@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = false
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -120,6 +120,9 @@ end)
 
 -- Enable break indent
 vim.opt.breakindent = true
+vim.opt.expandtab = true
+vim.opt.tabstop = 4
+vim.opt.shiftwidth = 4
 
 -- Save undo history
 vim.opt.undofile = true
@@ -146,16 +149,28 @@ vim.opt.splitbelow = true
 --  See `:help 'list'`
 --  and `:help 'listchars'`
 vim.opt.list = true
-vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
+vim.opt.listchars = { tab = '» ', trail = '·', lead = '·', nbsp = '␣' }
 
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
 
 -- Show which line your cursor is on
 vim.opt.cursorline = true
+vim.opt.cursorcolumn = true
+vim.opt.colorcolumn = '80' 
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 100
+
+-- Mina egna --
+vim.keymap.set('n', '<leader><enter>', [[i<enter><Esc>O]], { desc = "Insert new line"})
+vim.keymap.set('v', '"', [[c""<Esc>P]])
+vim.keymap.set('v', "'", [[c''<Esc>P]])
+vim.keymap.set('v', 'J', ":m '>+1<Enter>gv=gv")
+vim.keymap.set('v', 'K', ":m '<-2<Enter>gv=gv")
+-- stay in "indent"
+vim.keymap.set('v', '<', '<gv^')
+vim.keymap.set('v', '>', '>gv^')
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -237,6 +252,19 @@ require('lazy').setup({
   --
   -- Use `opts = {}` to force a plugin to be loaded.
   --
+  --  This is equivalent to:
+  --    require('Comment').setup({})
+  -- "gc" to comment visual regions/lines
+  --
+  -- Quarto
+  {
+    "quarto-dev/quarto-nvim",
+    dependencies = {
+      "jmbuhr/otter.nvim",
+    },
+    opts = {}
+  },
+  { 'numToStr/Comment.nvim', opts = {} },
 
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
@@ -456,9 +484,9 @@ require('lazy').setup({
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
-      'williamboman/mason-lspconfig.nvim',
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
+      --      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
+      --      'williamboman/mason-lspconfig.nvim',
+      --      'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
@@ -468,6 +496,12 @@ require('lazy').setup({
       'hrsh7th/cmp-nvim-lsp',
     },
     config = function()
+      local lspconfig = require("lspconfig")
+      lspconfig.clangd.setup({})
+      lspconfig.hls.setup({})
+      lspconfig.julials.setup({ on_attach = on_attach })
+      lspconfig.pylsp.setup({})
+      --lspconfig.rust-analyser.setup({})
       -- Brief aside: **What is LSP?**
       --
       -- LSP is an initialism you've probably heard, but might not understand what it is.
@@ -640,28 +674,28 @@ require('lazy').setup({
       --    :Mason
       --
       --  You can press `g?` for help in this menu.
-      require('mason').setup()
+      --      require('mason').setup()
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
-      })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+      --      local ensure_installed = vim.tbl_keys(servers or {})
+      --      vim.list_extend(ensure_installed, {
+      --        'stylua', -- Used to format Lua code
+      --      })
+      --      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      require('mason-lspconfig').setup {
-        handlers = {
-          function(server_name)
-            local server = servers[server_name] or {}
-            -- This handles overriding only values explicitly passed
-            -- by the server configuration above. Useful when disabling
-            -- certain features of an LSP (for example, turning off formatting for ts_ls)
-            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
-          end,
-        },
-      }
+      --      require('mason-lspconfig').setup {
+      --        handlers = {
+      --          function(server_name)
+      --            local server = servers[server_name] or {}
+      --            -- This handles overriding only values explicitly passed
+      --            -- by the server configuration above. Useful when disabling
+      --            -- certain features of an LSP (for example, turning off formatting for tsserver)
+      --            server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+      --            require('lspconfig')[server_name].setup(server)
+      --          end,
+      --        },
+      --      }
     end,
   },
 
@@ -824,21 +858,29 @@ require('lazy').setup({
     end,
   },
 
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is.
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
-    priority = 1000, -- Make sure to load this before all the other start plugins.
+--  { -- You can easily change to a different colorscheme.
+--    -- Change the name of the colorscheme plugin below, and then
+--    -- change the command in the config to whatever the name of that colorscheme is.
+--    --
+--    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
+--    'folke/tokyonight.nvim',
+--    priority = 1000, -- Make sure to load this before all the other start plugins.
+--    init = function()
+--      -- Load the colorscheme here.
+--      -- Like many other themes, this one has different styles, and you could load
+--      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
+--      vim.cmd.colorscheme 'tokyonight-night'
+--
+--      -- You can configure highlights by doing something like:
+--      vim.cmd.hi 'Comment gui=none'
+--    end,
+--  },
+  {
+    'catppuccin/nvim',
+    name = "catppuccin",
+    priority = 1000,
     init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
-
-      -- You can configure highlights by doing something like:
-      vim.cmd.hi 'Comment gui=none'
+      vim.cmd.colorscheme 'catppuccin'
     end,
   },
 
@@ -888,7 +930,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'julia', 'python' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {

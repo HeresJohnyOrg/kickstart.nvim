@@ -264,6 +264,30 @@ require('lazy').setup({
     },
     opts = {}
   },
+  -- Conform
+  {
+    -- https://www.josean.com/posts/neovim-linting-and-formatting
+    'stevearc/conform.nvim',
+    event = {"BufReadPre", "BufNewFile"},
+    config = function()
+      local conform = require("conform")
+      conform.setup({
+        formatters_by_ft = {
+          python = { "black" },
+        },
+        format_on_save = {
+          lsp_fallback = true,
+          async = false,
+        },
+      })
+      vim.keymap.set({ "n", "v" }, "<leader>mp", function()
+        conform.format({
+          lsp_falback = true,
+          async = false
+        })
+      end, { desc = "Format file or range (in visual mode)" })
+    end,
+  },
   { 'numToStr/Comment.nvim', opts = {} },
 
   -- Here is a more advanced example where we pass configuration

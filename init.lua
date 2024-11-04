@@ -256,6 +256,25 @@ require('lazy').setup({
   --    require('Comment').setup({})
   -- "gc" to comment visual regions/lines
   --
+  -- R.nvim
+  {
+    "R-nvim/R.nvim",
+    version = "~0.1.0",
+    config = function()
+      local opts = {
+        hook = {
+          on_filetype = function()
+            vim.api.nvim_buf_set_keymap(0, "n", "<Enter>", "<Plug>RDSendLine", {})
+            vim.api.nvim_buf_set_keymap(0, "v", "<Enter>", "<Plug>RDSendSelection", {})
+          end
+        },
+        R_args = {"--quiet", "--no-save"},
+        min_edior_width = 72,
+        rconsole_width=78,
+      }
+      require("r").setup(opts)
+    end,
+  },
   -- Quarto
   {
     "quarto-dev/quarto-nvim",
@@ -274,6 +293,7 @@ require('lazy').setup({
       conform.setup({
         formatters_by_ft = {
           python = { "black" },
+          c = { "clang-format" },
         },
         format_on_save = {
           lsp_fallback = true,
@@ -954,7 +974,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'julia', 'python' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'julia', 'python', 'r', 'yaml', 'rnoweb' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
